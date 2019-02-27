@@ -1,0 +1,475 @@
+Why you really should give Golang a try
+21 Nov 2018
+
+
+Triet
+@phmtriet
+
+* History
+
+* History
+.image images/logo.png _ _
+
+Designed by *Google* Engineer: 
+- [[https://en.wikipedia.org/wiki/Rob_Pike][Rob Pike]], [[https://en.wikipedia.org/wiki/Ken_Thompson][Ken Thompson]], Robert Griesemer
+- Later: Ian Lance Taylor, Russ Cox
+
+: Rob Pike (1959) Bell Labs, where he was a member of the Unix team, UTF-8 author
+: Ken Thompson (1943) Bell Labs, American pioneer of computer science, designed and implemented the original Unix operating system, invent B lang, Belle (1983) chess machine, UTF-8
+
+* History
+.image images/mascot.jpg _ _
+
+- Go was conceived in  *2007*
+- Publicly announced and open source in Nov *2009*
+- Version 1.0 was released in Mar *2012*, current version is 1.11
+- Go 1 guarantees compatibility for the language specification and major parts of the standard library.
+
+* Why did Google develop Go?
+
+* Why did Google develop Go?
+
+- To solve Google's problems - big problems.
+- To eliminate the slowness and clumsiness of software development at Google, and thereby to make the process more productive and scalable
+
+.image images/compiling.png _ _
+
+* Google's issues
+
+- Slow builds
+- Uncontrolled dependencies
+- Each programmer using a different subset of the language
+- Poor program understanding (code hard to read, poorly documented, and so on)
+- Duplication of effort
+- Cost of updates
+- Version skew
+- Difficulty of writing automatic tools
+- Cross-language builds
+
+: Take 5 hours to build chrome from scratch
+: Library of string functions into Go, Garbage collecting in Go simple to think about, 
+: and efficient in ways some other string libraries are not (I’m talking to you, C++ committee).
+: In 1984, a compilation of ps.c, the source to the Unix ps command, was observed to #include <sys/stat.h> 37 times by the time all the preprocessing had been done
+
+* Google's issues
+To build a large Google binary on a single computer is impractical.
+
+In 2007, instrumented the build of a major Google binary:
+
+- 2000 files
+- 4.2 megabytes
+- 8 gigabytes delivered to compiler
+- 2000 bytes sent to compiler for every C++ source byte
+- it's real work too: <string> for example
+- hours to build
+
+* Why Golang is the solution?
+
+* What is Golang philosophy?
+- Simplicity
+- Readability
+- Reliable
+- Right set of Features
+.image images/gopherslide2sm.jpg 300 _
+
+: If a language has too many features, you waste time choosing which ones to use. 
+: Then implement, refine, possibly rethink and redo.
+: Readable code is reliable code. Easy to understand, easy to work on, if it breaks, it's easy to fix
+: Of course, there must be some features.  But which ones? The right ones!  Design by consensus.
+
+* What is Golang philosophy?
+- Everyone's code is the same
+- Back compatible, no breaking change
+- New version mostly optimize stuff in the backend
+- Golang actually written in Golang
+
+* Fun & Fast Graph compare language
+.image images/funfast.svg _ _
+
+: https://talks.golang.org/2014/gocon-tokyo.slide#28
+
+* Identifiers
+
+- Identifiers name program entities such as variables and types.
+- An identifier is a sequence of one or more letters and digits. The first character in an identifier must be a letter.
+
+  a
+  _x9
+  ThisVariableIsExported
+  αβ
+  LôCồHót 
+
+.play -edit code/hello_world.go
+
+- Uses Pascal/Modula-style syntax: name before type, more type keywords.
+
+* Declarations
+Uses Pascal/Modula-style syntax: name before type, more type keywords.
+
+	var fn func([]int) int
+	type T struct { a, b int  }
+
+Left-to-right style make easy to read and write when things become more complex
+
+* Declarations
+
+A function pointer in C
+
+	int (*fp)(int a, int b);
+
+And what if one of fp's arguments is itself a function
+
+	int (*fp)(int (*ff)(int x, int y), int b)
+
+And look what happens to fp's declaration if you don't name the parameters:
+
+	int (*fp)(int (*)(int, int), int)
+
+And what if the return type is a function pointer?
+
+	int (*(*fp)(int (*)(int, int), int))(int, int)
+
+: fp is a pointer to a function because if you write the expression (*fp)(a, b) you'll call a function that returns int.
+
+* Declarations
+
+A function in Go
+
+	func(a,b int) int
+
+one of its argument is a function
+	
+	func(func(int, int) int, int) int
+
+And when it return a function
+
+	func(func(int,int) int, int) func(int, int) int
+
+A closure example
+
+	sum := func(a, b int) int { return a+b  } (3, 4)
+
+* Keyword
+
+- Not super small, just clean.
+- Only *25* keywords.
+
+  break        default      func         interface    select
+  case         defer        go           map          struct
+  chan         else         goto         package      switch
+  const        fallthrough  if           range        type
+  continue     for          import       return       var
+
+* Operators and punctuation
+
+  +    &     +=    &=     &&    ==    !=    (    )
+  -    |     -=    |=     ||    <     <=    [    ]
+  *    ^     *=    ^=     <-    >     >=    {    }
+  /    <<    /=    <<=    ++    =     :=    ,    ;
+  %    >>    %=    >>=    --    !     ...   .    :
+       &^          &^=
+
+* Constant & Variable
+- A variable is a storage location for holding a value. The set of permissible values is determined by the variable's type.
+
+* Types
+- *Boolean*: _boolean_ true/false
+- *Numeric*: _uint_, _int_, _float_, _complex_, _byte_, _rune_,_..._
+- *String*: _string_ epresents the set of string values. A string value is a (possibly empty) sequence of bytes
+
+  var i, j int = 1, 2
+  k := 3
+  c, python, java := true, false, "no!"
+  var u int
+  var (
+  	ToBe   bool       = false
+  	MaxInt uint64     = 1<<64 - 1
+  	z      complex128 = cmplx.Sqrt(-5 + 12i)
+  )
+
+* Types
+- *Array/Slice*: `[ ]` sequence of elements of a single type
+- *Struct*: sequence of named elements, called fields, each of which has a name and a type. Field names may be specified explicitly (IdentifierList) or implicitly (EmbeddedField)
+
+  // An empty struct.
+  struct {}
+  
+  struct {
+  	x, y int
+  	u float32
+  	_ float32  // padding
+  	A *[]int   
+  	F func()
+  	E1 	    // embedded field
+  	*E2 	   // embedded field
+  	Animal.Dog // embedded field
+  }
+
+* Types 
+- *Pointer*: A pointer type denotes the set of all pointers to variables of a given type
+
+.play code/pointer.go /^func main/,/^}/
+ 
+* Types
+- *Function*: denotes the set of all functions with the same parameter and result types
+
+  func()
+  func(x int) int
+  func(a, _ int, z float32) bool
+  func(a, b int, z float32) (bool)
+  func(prefix string, values ...int)
+  func(a, b int, z float64, opt ...interface{}) (success bool)
+  func(int, int, float64) (float64, *[]int)
+  func(n int) func(p *T)
+
+* Types
+Go does not support default function arguments.
+
+But why?
+
+- too easy to throw in defaulted args to fix design problems
+- encourages too many args
+- too hard to understand the effect of the fn for different combinations of args
+- Extra verbosity may happen but that encourages extra thought about names.
+
+Related: Go has easy-to-use, type-safe support for variadic functions.
+
+* Types
+- *Interface*: An interface type specifies a method set called its interface. A variable of interface type can store a value of any type with a method set that is any superset of the interface.
+
+	// A simple File interface
+	interface {
+		Read(b Buffer) bool
+		Write(b Buffer) bool
+		Close()
+	}
+
+More than one type may implement an interface. For instance, if two types S1 and S2 have the method set
+
+	func (p T) Read(b Buffer) bool { return …  }
+	func (p T) Write(b Buffer) bool { return …  }
+	func (p T) Close() { …  }
+
+(where T stands for either S1 or S2) then the File interface is implemented by both S1 and S2, regardless of what other methods S1 and S2 may have or share.
+
+* Types
+- *Interface*
+
+.play code/interface.go
+
+* Types
+- Type switch with *interface*
+
+.play code/type_switch.go
+
+* Types
+- *Map*: A map is an unordered group of elements of one type, called the element type, indexed by a set of unique keys of another type, called the key type. The value of an uninitialized map is nil.
+
+	map[string]int
+	map[*T]struct{ x, y float64  }
+	map[string]interface{}
+
+.play code/map.go /^func main/,/^}/
+
+* Types
+- *Channel*: A channel provides a mechanism for concurrently executing functions to communicate by sending and receiving values of a specified element type. The value of an uninitialized channel is nil
+
+	chan T          // can be used to send and receive values of type T
+	chan<- float64  // can only be used to send float64s
+	<-chan int      // can only be used to receive ints
+
+* Function and method lookup
+- Method lookup by name only, not type. 
+- A type cannot have two methods with the same name, ever. 
+- Easy to identify which function/method is referred to. 
+- Simple implementation, simpler program, fewer surprises.
+
+Given a method x.M, there's only ever one M associated with x.
+
+* Composition not inheritance
+
+* Composition not inheritance
+- Go is object-oriented. 
+- But Go does not have classes or subtype inheritance.
+Why not inheritance?
+
+- Design by type inheritance oversold.
+- Generates brittle code. 
+- Early decisions hard to change, often poorly informed. 
+- Therefore encourages overdesign early on: predict every eventuality. 
+- Exacerbates the problem, complicates designs.
+
+=> Interface composition
+
+: The model works best when the behavior (method set) is fixed, but once you subclass a type and add a method, the behaviors are no longer identical
+: The hierarchy must be designed early, first step of designing, and early decisions can be difficult to change once written. As a consequence, encourages early overdesign as the programmer tries to predict every possible use the software, adding layers of type and abstraction just in case. 
+: This is upside down. The way pieces of a system interact should adapt as it grows, not be fixed at the dawn of time.
+: one-method interfaces to define trivial behaviors that serve as clean, comprehensible boundaries between components.
+: All data types that implement these methods satisfy this interface implicitly; there is no implements declaration. That said, interface satisfaction is statically checked at compile time so despite this decoupling interfaces are type-safe.
+
+
+
+* Naming
+Simple rule:
+
+- upper case initial letter: Name is visible to clients of package
+- otherwise: name (or _Name) is not visible to clients of package
+
+Names do not leak across boundaries.
+No surprises when importing: adding an exported name to my package cannot break your package!
+
+  
+* Dependencies
+
+* Dependencies
+- Dependencies are defined (syntactically) in the language.
+
+- Explicit, clear, computable.
+
+	import "encoding/json"
+- Unused dependencies cause error at compile time.
+
+- Efficient: dependencies traversed once per source file...
+- No circular import
+
+: Forces clear demarcation between packages.
+: Simplifies compilation, linking, initialization.
+
+* Dependencies
+
+	package A imports package B;
+	package B imports package C;
+	package A does not import package C
+
+The object code for B includes all the information about C needed to import B. 
+Therefore in A the line
+
+	import "B"
+does not require the compiler to read C when compiling A.
+
+Also, the object files are designed so the "export" information comes first; compiler doing import does not need to read whole file.
+
+: To build this program, first, C is compiled; dependent packages must be built before the packages that depend on them. Then B is compiled; finally A is compiled, and then the program can be linked.
+: When A is compiled, the compiler reads the object file for B, not its source code. That object file for B contains all the type information necessary for the compiler to execute the
+
+* Packages
+
+* Packages
+- Every Go program is made up of packages, "encoding/json/json.go", starts
+
+	package json
+- Programs start running in package `main`.
+- To use a package, need to identify it by path:
+
+	import "encoding/json"
+- And then the package name is used to qualify items from package:
+
+	var dec = json.NewDecoder(reader)
+Clarity: can always tell if name is local to package from its syntax: Name vs. pkg.Name. 
+
+* Remote packages
+
+Package path syntax works with remote repositories. 
+The import path is just a string.
+
+	go get github.com/go-redis/redis   // Command to fetch package
+
+	import "github.com/go-redis/redis" // Redis client's import statement
+
+	var client redis.Client        // Client's use of package
+
+* Concurrency
+
+* Concurrency
+
+- Concurrency is important to the modern computing environment with its multicore machine.
+- It's easy to write concurrency app using light-weight processes called goroutines, and channels
+- A goroutine is a lightweight thread managed by the Go runtime.
+- Start a goroutine
+
+	go f(x, y, z)
+
+* Concurrency
+
+.play -edit code/goroutines.go
+
+* Concurrency
+.image images/concurrency.svg
+
+: https://talks.golang.org/2014/gocon-tokyo.slide#31
+
+* Garbage collection
+
+* Garbage collection
+- Much of the difficulty of concurrent programming is to manage the object lifetime, has to guarantee they become freed safely, and it's quite difficult when object is passed among threads.
+- Garbage collection help writting concurrent program easier
+- Make interface simpler since it don't need to specific how memory is managed across them
+- Gives the programmer tools to control GC overhead.
+
+* Garbage collection
+- Improved by each version
+https://blog.golang.org/ismmkeynote
+
+* Errors
+
+* Error handling
+Multiple function return values inform the design for handling errors.
+	
+	result, err := doSomeThing()
+
+Go has no `try-catch` control structures for exceptions. 
+Return error instead: built-in interface type that can "stringify" itself:
+
+	type error interface { Error() string }
+
+Clear and simple.
+
+Philosophy:
+
+- Forces you think about errors—and deal with them—when they arise. 
+- Errors are _normal_. Errors are not _exceptional_. 
+- Use the existing language to compute based on them. 
+- Don't need a sublanguage that treats them as exceptional.
+
+: Result is better code (if more verbose).
+
+* Tools
+
+* Tools
+- Software Engineer require tools.
+- Go make tools easy to write.
+- Have some basic useful cmd tool: https://golang.org/doc/cmd
+- Bunch of helper tool: https://godoc.org/golang.org/x/tools
+
+* Standard Library
+- Golang has almost all basic-need library https://golang.org/pkg/
+
+* Who use Golang
+- The world: https://github.com/golang/go/wiki/GoUsers
+- Vietnam: https://github.com/golang-vietnam/companies
+
+* Some most popular Golang projects
+- Docker
+- Kubernetes
+- Etherum
+- Prometheus
+- Etcd
+- Traefik
+- fzf
+- TiDB
+- RockDB
+- InfluxDB
+- Terraform
+
+* Community
+- Mailing list: https://groups.google.com/forum/#!forum/golang-nuts
+- Slack: 
+	- Offical Golang Slack: http://gophers.slack.com/
+	- Golang VN Slack: https://golang.org.vn/
+- IRC: #go-nuts
+- Forums: https://forum.golangbridge.org/
+
+* Well, things people don't like
+- Simplicity: no generic, no exception,...
+- Poor Library Support
+- Dependency Management
